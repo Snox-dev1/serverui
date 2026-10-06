@@ -23,10 +23,16 @@ import { useWindowManager } from "@/src/components/window/window-context";
 import { useServer } from "@/src/lib/api/server-context";
 import { useSelectedServer } from "@/src/lib/session";
 import { formatSize, totalSize } from "@/src/lib/files/format";
+import { getFileViewer } from "@/src/lib/files/file-type";
 import { Breadcrumbs } from "@/src/components/apps/files/Breadcrumbs";
 import { FileContextMenu } from "@/src/components/apps/files/FileContextMenu";
 import { FileList } from "@/src/components/apps/files/FileList";
 import { FileToolbar, toolbarClass } from "@/src/components/apps/files/FileToolbar";
+
+function isEditable(entry: FileEntry) {
+  const kind = getFileViewer({ name: entry.name, mime: entry.mime });
+  return entry.type === "file" && (kind === "text" || kind === "code");
+}
 
 type Dialog =
   | { type: "file"; value: string }
@@ -842,6 +848,13 @@ export function FilesApp() {
           }}
           onInfo={() => openInfo(menu.entry)}
           onTerminalHere={() => openTerminalHere(menu.entry)}
+          onEdit={
+            menu.entry && isEditable(menu.entry)
+              ? () =>
+                  menu.entry &&
+                  openWindow("editor", { filePath: menu.entry.path, fileName: menu.entry.name })
+              : undefined
+          }
           onClearSelection={clearSelection}
           onClose={() => setMenu(null)}
         />

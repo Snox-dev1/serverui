@@ -25,7 +25,8 @@ Working in this repository:
 - Archive extraction in Files (`.zip`, `.tar`, `.tar.gz`/`.tgz`, `.tar.bz2`, `.tar.xz`, `.7z`),
   run on the server with its own `tar` / `unzip` / `7z`
 - Store: see which tools are installed on the server (VS Code, Claude Code, Bun, Git, Docker,
-  Node.js) and install, update, or remove the ones it manages, from a fixed catalogue
+  Node.js) and install, update, or remove the ones it manages, from a fixed catalogue.
+  See [docs/store.md](docs/store.md), including how to add an app
 - VS Code in a window: the Store installs code-server, ServerUI runs it on the server and
   proxies it over the existing SSH connection. Files gets "Edit with Code" when it is installed
 - CPU, memory, disk, and uptime metrics from the selected server
@@ -72,7 +73,8 @@ Architecture** for Web / Desktop / Source). Desktop hardening:
 [docs/desktop-storage.md](docs/desktop-storage.md). Releases and installers:
 [docs/releases.md](docs/releases.md). Product audit / manual QA:
 [docs/product-audit.md](docs/product-audit.md),
-[docs/manual-qa.md](docs/manual-qa.md).
+[docs/manual-qa.md](docs/manual-qa.md). Store and how to add an app:
+[docs/store.md](docs/store.md).
 
 ## How it works
 
@@ -100,6 +102,7 @@ serverui/
 │   ├── product-audit.md
 │   ├── manual-qa.md
 │   ├── releases.md
+│   ├── store.md
 │   └── images/
 ├── scripts/
 │   └── pre-commit

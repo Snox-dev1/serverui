@@ -276,7 +276,7 @@ function AppCard({
   const actions = status?.actions ?? [];
 
   return (
-    <li className="sui-card rounded-[14px] p-4">
+    <li className="sui-card flex flex-col rounded-[14px] p-4">
       <div className="flex items-start gap-3.5">
         <div
           className={`grid size-12 shrink-0 place-items-center rounded-[11px] bg-gradient-to-br text-white shadow-sm ${app.tint}`}
@@ -284,56 +284,52 @@ function AppCard({
           <Icon className="size-6" aria-hidden />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-            <h4 className="text-sm font-semibold sui-title">{app.name}</h4>
-            {status?.installed ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                <Check className="size-3" aria-hidden />
-                Installed{status.version ? ` ${formatVersion(status.version)}` : ""}
-              </span>
+          <h4 className="text-sm font-semibold sui-title">{app.name}</h4>
+          {status?.installed ? (
+            <p className="mt-0.5 inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+              <Check className="size-3" aria-hidden />
+              Installed{status.version ? ` ${formatVersion(status.version)}` : ""}
+            </p>
+          ) : null}
+          <p className="mt-1 text-[12.5px] leading-5 sui-muted">{app.tagline}</p>
+        </div>
+      </div>
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-3">
+        <p className="min-w-0 text-[11px] sui-muted">{app.footprint}</p>
+        {running && job ? (
+          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium sui-muted">
+            <Loader2 className="size-3.5 animate-spin" aria-hidden />
+            {RUNNING_LABEL[job.action]}
+          </span>
+        ) : confirming ? (
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] sui-muted">Remove {app.name}?</span>
+            <button type="button" className={secondaryClass} onClick={onCancelRemove}>
+              Cancel
+            </button>
+            <button type="button" className={dangerClass} onClick={() => onAction("remove")}>
+              Remove
+            </button>
+          </div>
+        ) : actions.length === 0 ? null : (
+          <div className="flex gap-1.5">
+            {actions.includes("install") ? (
+              <button type="button" className={primaryClass} onClick={() => onAction("install")}>
+                Get
+              </button>
+            ) : null}
+            {actions.includes("update") ? (
+              <button type="button" className={secondaryClass} onClick={() => onAction("update")}>
+                Update
+              </button>
+            ) : null}
+            {actions.includes("remove") ? (
+              <button type="button" className={secondaryClass} onClick={onAskRemove}>
+                Remove
+              </button>
             ) : null}
           </div>
-          <p className="mt-0.5 text-[12.5px] leading-5 sui-muted">{app.tagline}</p>
-          <p className="mt-2 text-[11px] sui-muted">{app.footprint}</p>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-1.5">
-          {running && job ? (
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium sui-muted">
-              <Loader2 className="size-3.5 animate-spin" aria-hidden />
-              {RUNNING_LABEL[job.action]}
-            </span>
-          ) : confirming ? (
-            <>
-              <span className="text-[11px] sui-muted">Remove {app.name}?</span>
-              <div className="flex gap-1.5">
-                <button type="button" className={secondaryClass} onClick={onCancelRemove}>
-                  Cancel
-                </button>
-                <button type="button" className={dangerClass} onClick={() => onAction("remove")}>
-                  Remove
-                </button>
-              </div>
-            </>
-          ) : actions.length === 0 ? null : (
-            <div className="flex gap-1.5">
-              {actions.includes("install") ? (
-                <button type="button" className={primaryClass} onClick={() => onAction("install")}>
-                  Get
-                </button>
-              ) : null}
-              {actions.includes("update") ? (
-                <button type="button" className={secondaryClass} onClick={() => onAction("update")}>
-                  Update
-                </button>
-              ) : null}
-              {actions.includes("remove") ? (
-                <button type="button" className={secondaryClass} onClick={onAskRemove}>
-                  Remove
-                </button>
-              ) : null}
-            </div>
-          )}
-        </div>
+        )}
       </div>
       {job ? <JobPanel job={job} onDismiss={onDismissJob} /> : null}
     </li>

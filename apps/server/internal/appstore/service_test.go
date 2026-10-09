@@ -116,13 +116,14 @@ func waitFor(t *testing.T, svc *Service, serverID, id string, state State) Job {
 }
 
 func TestJobStreamsLogAndFinishes(t *testing.T) {
-	svc := New(scriptRunner{lines: []string{"downloading", "installed"}})
+	// The runner answers the verification detect with the same canned lines.
+	svc := New(scriptRunner{lines: []string{"downloading", "bun\t1.2.3"}})
 	j, err := svc.Start("s1", "bun", ActionInstall)
 	if err != nil {
 		t.Fatal(err)
 	}
 	done := waitFor(t, svc, "s1", j.ID, StateDone)
-	if !slices.Equal(done.Log, []string{"downloading", "installed"}) {
+	if !slices.Equal(done.Log, []string{"downloading", "bun\t1.2.3"}) {
 		t.Fatalf("log: %v", done.Log)
 	}
 	if _, err := svc.Get("other-server", j.ID); !errors.Is(err, ErrJobNotFound) {
@@ -142,9 +143,27 @@ func TestJobFailureSurfacesTheScriptsOwnMessage(t *testing.T) {
 	}
 }
 
+// A script that exits 0 without doing its job (an installer printing usage) must
+// not be reported as done.
+func TestExitZeroIsNotSuccessUntilTheAppIsReallyThere(t *testing.T) {
+	install := New(scriptRunner{lines: []string{"Unknown flag -s"}})
+	j, _ := install.Start("s1", "bun", ActionInstall)
+	failed := waitFor(t, install, "s1", j.ID, StateFailed)
+	if !strings.Contains(failed.Error, "not on the server") {
+		t.Fatalf("error: %q", failed.Error)
+	}
+
+	remove := New(scriptRunner{lines: []string{"git\t2.39.2"}})
+	j, _ = remove.Start("s1", "git", ActionRemove)
+	failed = waitFor(t, remove, "s1", j.ID, StateFailed)
+	if !strings.Contains(failed.Error, "still on the server") {
+		t.Fatalf("error: %q", failed.Error)
+	}
+}
+
 func TestOneRunningJobPerAppAndServer(t *testing.T) {
 	gate := make(chan struct{})
-	svc := New(scriptRunner{gate: gate})
+	svc := New(scriptRunner{gate: gate, lines: []string{"bun\t1.2.3"}})
 	first, err := svc.Start("s1", "bun", ActionInstall)
 	if err != nil {
 		t.Fatal(err)

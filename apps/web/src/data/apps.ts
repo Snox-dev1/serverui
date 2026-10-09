@@ -10,7 +10,7 @@ export const APP_IDS = [
 ] as const;
 
 export type DockAppId = (typeof APP_IDS)[number];
-export type AppId = DockAppId | "about" | "viewer";
+export type AppId = DockAppId | "about" | "viewer" | "vscode";
 
 /** Apps that stay in the catalog but are not shown on the dock. */
 export const DOCK_HIDDEN_IDS: ReadonlySet<DockAppId> = new Set(["domains", "databases"]);
@@ -60,6 +60,13 @@ export const APP_META: Record<
     width: 760,
     height: 560,
     available: false,
+    chrome: "dark",
+  },
+  vscode: {
+    title: "VS Code",
+    width: 1180,
+    height: 740,
+    available: true,
     chrome: "dark",
   },
   applications: {

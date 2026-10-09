@@ -22,12 +22,23 @@ export type StoreJob = {
 // Detection runs a few commands over SSH, so it gets more room than the default.
 const DETECT_TIMEOUT_MS = 40_000;
 
+// Last detection per server, so UI that only needs a hint (the Files menu) does not
+// re-run it. Every fresh detection from the Store refreshes this.
+const lastStatuses = new Map<string, StoreAppStatus[]>();
+
 export async function listStoreApps(serverId: string) {
   const query = new URLSearchParams({ serverId });
   const result = await apiRequest<{ apps: StoreAppStatus[] }>(`/api/store/apps?${query}`, {
     timeoutMs: DETECT_TIMEOUT_MS,
   });
+  lastStatuses.set(serverId, result.apps);
   return result.apps;
+}
+
+/** Whether code-server is installed on the server; detects once, then reuses the last answer. */
+export async function codeServerInstalled(serverId: string) {
+  const apps = lastStatuses.get(serverId) ?? (await listStoreApps(serverId));
+  return apps.some((app) => app.id === "code-server" && app.installed);
 }
 
 export function startStoreJob(serverId: string, appId: string, action: StoreAction) {

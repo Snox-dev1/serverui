@@ -89,7 +89,7 @@ else echo "no supported package manager (apt, dnf or apk)"; exit 1; fi
 `, cmds[0], cmds[1], cmds[2])
 }
 
-var codeServerInstall = fetchAndRun("https://code-server.dev/install.sh", "sh", "-s -- --method standalone")
+var codeServerInstall = fetchAndRun("https://code-server.dev/install.sh", "sh", "--method standalone")
 
 // Catalog is intentionally closed. Docker and Node.js are detect-only: removing
 // them remotely can take containers or other tools down with it.
@@ -100,8 +100,13 @@ var Catalog = []App{
 		Version: `code-server --version | awk '{print $1}'`,
 		Install: codeServerInstall,
 		Update:  codeServerInstall,
-		// Keeps ~/.config/code-server (settings, password) on purpose.
-		Remove: `rm -rf "$HOME"/.local/lib/code-server-* "$HOME/.local/bin/code-server"` + "\n",
+		// Stops the process ServerUI started (the pid is only trusted if it still is
+		// code-server), then deletes the binary. Keeps ~/.config/code-server on purpose.
+		Remove: `P="$HOME/.local/share/serverui/code-server.pid"
+if [ -f "$P" ] && grep -q code-server "/proc/$(cat "$P")/cmdline" 2>/dev/null; then kill "$(cat "$P")" 2>/dev/null; fi
+rm -f "$HOME"/.local/share/serverui/code-server.*
+rm -rf "$HOME"/.local/lib/code-server-* "$HOME/.local/bin/code-server"
+`,
 	},
 	{
 		ID:      "claude-code",

@@ -165,15 +165,46 @@ func (s *Service) execute(j *job, script string) {
 		}
 	})
 
+	var verifyErr error
+	if err == nil {
+		verifyErr = s.verify(ctx, j)
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	j.finished = time.Now()
-	if err != nil {
+	switch {
+	case verifyErr != nil:
+		j.State = StateFailed
+		j.Error = verifyErr.Error()
+	case err != nil:
 		j.State = StateFailed
 		j.Error = failureMessage(j.Log, err)
-		return
+	default:
+		j.State = StateDone
 	}
-	j.State = StateDone
+}
+
+// verify detects again after a script exits 0: installers can print usage or an
+// error and still succeed, and "done" must mean the app is really there (or gone).
+// A detection that cannot run is not held against the job.
+func (s *Service) verify(ctx context.Context, j *job) error {
+	statuses, err := s.Statuses(ctx, j.serverID)
+	if err != nil {
+		return nil
+	}
+	for _, st := range statuses {
+		if st.ID != j.AppID {
+			continue
+		}
+		if j.Action == ActionRemove && st.Installed {
+			return errors.New("the removal finished but the app is still on the server")
+		}
+		if j.Action != ActionRemove && !st.Installed {
+			return errors.New("the script finished but the app is not on the server. Check the log above")
+		}
+	}
+	return nil
 }
 
 // failureMessage prefers the script's own last line (it already explains the

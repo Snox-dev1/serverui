@@ -34,7 +34,7 @@ export const STORE_CATALOG: readonly StoreApp[] = [
     category: "AI",
     icon: Sparkles,
     tint: "from-orange-400 to-amber-600",
-    footprint: "CLI · needs Node.js",
+    footprint: "CLI · installs in ~/.local, no root",
   },
   {
     id: "docker",
@@ -43,7 +43,7 @@ export const STORE_CATALOG: readonly StoreApp[] = [
     category: "Tools",
     icon: Container,
     tint: "from-cyan-400 to-sky-600",
-    footprint: "Engine · root required",
+    footprint: "Detected only, managed on the server",
   },
   {
     id: "nodejs",
@@ -52,7 +52,7 @@ export const STORE_CATALOG: readonly StoreApp[] = [
     category: "Runtimes",
     icon: Hexagon,
     tint: "from-emerald-400 to-green-700",
-    footprint: "Runtime · ~100 MB disk",
+    footprint: "Detected only, managed on the server",
   },
   {
     id: "bun",

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"serverui/server/internal/appstore"
 	"serverui/server/internal/archive"
 	"serverui/server/internal/crypto"
 	"serverui/server/internal/filesystem"
@@ -35,7 +36,7 @@ func testAPI(t *testing.T) http.Handler {
 	})
 	pool := svc.Pool()
 	files := filesystem.New(pool)
-	return New(svc, metrics.NewCollector(pool), files, archive.New(pool, files.List), terminal.New(pool)).Handler()
+	return New(svc, metrics.NewCollector(pool), files, archive.New(pool, files.List), appstore.New(pool), terminal.New(pool)).Handler()
 }
 
 func TestServerCRUDHidesCredentials(t *testing.T) {

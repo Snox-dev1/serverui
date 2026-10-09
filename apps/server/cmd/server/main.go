@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"serverui/server/internal/api"
+	"serverui/server/internal/appstore"
 	"serverui/server/internal/archive"
 	"serverui/server/internal/crypto"
 	"serverui/server/internal/db"
@@ -56,6 +57,7 @@ func main() {
 		metrics.NewCollector(pool),
 		files,
 		archive.New(pool, files.List),
+		appstore.New(pool),
 		terminal.New(pool),
 	).Handler()
 

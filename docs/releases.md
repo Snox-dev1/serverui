@@ -13,9 +13,9 @@ intentional GitHub Releases process for the ServerUI desktop application.
 | Go sidecar | `externalBin: binaries/serverui-server` + `prepare-sidecar.sh` |
 | Product name | `ServerUI` |
 | Identifier | `com.serverui.desktop` (stable; do not change casually) |
-| Version | `0.1.0` in tauri.conf / Cargo / package.json |
+| Version | `0.1.0` in tauri.conf / Cargo / package.json at snapshot time (current: `0.2.0`) |
 | Icons | Present (`png` / `icns` / `ico`); brand mark with white OS-tile background |
-| Bundle targets | `dmg`, `nsis`, `msi`, `appimage`, `deb` (no RPM) |
+| Bundle targets | `dmg`, `nsis`, `msi`, `appimage`, `deb` (no RPM); optional Store **MSIX** via WinApp CLI (see [microsoft-store-msix.md](microsoft-store-msix.md)) |
 | Signing | Prepared via CI secrets; absent → unsigned (documented) |
 | Updater | Configured (`pubkey` + GitHub `latest.json`); signatures only when private key present |
 | CI desktop matrix | macOS arm64 + x64, Windows x64, Linux x64 |
@@ -38,7 +38,7 @@ Releases are deliberate. Do **not** auto-bump on every commit.
 Release tags must match the conf version:
 
 ```text
-v0.1.0  →  tauri.conf.json version "0.1.0"
+v0.2.0  →  tauri.conf.json version "0.2.0"
 ```
 
 The release workflow refuses mismatched tags.
@@ -79,7 +79,7 @@ Then rebuild installers so DMG / `.app` / Windows / Linux packages pick up the n
 | -------- | ------------ | ----------- | --------- | --------- | ----- |
 | macOS | Apple Silicon (ARM64) | `aarch64-apple-darwin` | `.dmg` (+ `.app.tar.gz` updater) | `macos-14` | Native on arm64 runners |
 | macOS | Intel (x86_64) | `x86_64-apple-darwin` | `.dmg` (+ `.app.tar.gz` updater) | `macos-14` + `--target` | Cross-built from Apple Silicon; arch verified with `file`/`lipo`. **Not** a universal binary. Runtime on Intel hardware is separate from CI build verification. |
-| Windows | x64 | `x86_64-pc-windows-msvc` | NSIS `-setup.exe` (primary), optional `.msi` | `windows-latest` | MSI kept optional |
+| Windows | x64 | `x86_64-pc-windows-msvc` | NSIS `-setup.exe` (primary), optional `.msi`, optional Store `.msix` | `windows-latest` | MSI kept optional; MSIX via `make desktop-build-msix` |
 | Linux | x64 | `x86_64-unknown-linux-gnu` | `.AppImage`, `.deb` | `ubuntu-22.04` | No RPM / Flatpak / Snap |
 
 **Not supported in this phase:** Windows ARM64, Linux ARM64, RPM, Flatpak, Snap, AUR.

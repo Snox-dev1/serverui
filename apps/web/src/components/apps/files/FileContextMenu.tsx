@@ -31,6 +31,7 @@ type FileContextMenuProps = FileMenuActions & {
   canPaste: boolean;
   /** Only given when VS Code is installed on the server; without it the item is hidden. */
   onEditWithCode?: () => void;
+  onAddToDesktop?: () => void;
   /** True while an extraction runs in this window; Extract items are disabled. */
   extracting?: boolean;
   onClose: () => void;
@@ -85,6 +86,7 @@ export function menuItems({
     ...(a.onEditWithCode
       ? [{ label: dir ? "Open in VS Code" : "Edit with Code", run: a.onEditWithCode }]
       : []),
+    ...(dir && a.onAddToDesktop ? [{ label: "Add to Desktop", run: a.onAddToDesktop }] : []),
     { label: "Copy Path", run: a.onCopyPath },
     { label: "Details", run: a.onInfo },
     ...(dir ? [] : [{ label: "Download", run: a.onDownload }]),

@@ -42,7 +42,7 @@ function AppBody({
     case "dashboard":
       return <DashboardApp />;
     case "files":
-      return <FilesApp />;
+      return <FilesApp payload={payload} />;
     case "terminal":
       return <TerminalApp payload={payload} />;
     case "editor":

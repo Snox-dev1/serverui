@@ -37,6 +37,7 @@ import { useServer } from "@/src/lib/api/server-context";
 import { codeServerInstalled } from "@/src/lib/api/store";
 import { useSelectedServer } from "@/src/lib/session";
 import { formatSize, totalSize } from "@/src/lib/files/format";
+import { getFileViewer } from "@/src/lib/files/file-type";
 import { Breadcrumbs } from "@/src/components/apps/files/Breadcrumbs";
 import { DownloadPanel, useDownloadQueue } from "@/src/components/apps/files/DownloadQueue";
 import { FileContextMenu } from "@/src/components/apps/files/FileContextMenu";
@@ -44,6 +45,11 @@ import { FileGrid } from "@/src/components/apps/files/FileGrid";
 import { FileList } from "@/src/components/apps/files/FileList";
 import { FileToolbar, toolbarClass, type FilesView } from "@/src/components/apps/files/FileToolbar";
 import { FilesSidebar } from "@/src/components/apps/files/FilesSidebar";
+
+function isEditable(entry: FileEntry) {
+  const kind = getFileViewer({ name: entry.name, mime: entry.mime });
+  return entry.type === "file" && (kind === "text" || kind === "code");
+}
 
 type Dialog =
   | { type: "file"; value: string }
@@ -116,6 +122,9 @@ export function FilesApp({ payload }: { payload?: WindowPayload }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  // Bumped on every open so the name input remounts and autoFocus runs again,
+  // even when a dialog is already showing (#12).
+  const [dialogKey, setDialogKey] = useState(0);
   const [pendingDelete, setPendingDelete] = useState<FileEntry[] | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingProgress, setDeletingProgress] = useState<{
@@ -751,8 +760,13 @@ export function FilesApp({ payload }: { payload?: WindowPayload }) {
     }
   }
 
-  const newFolder = () => setDialog({ type: "dir", value: "" });
-  const newFile = () => setDialog({ type: "file", value: "" });
+  function openDialog(next: Dialog) {
+    setDialog(next);
+    setDialogKey((key) => key + 1);
+  }
+
+  const newFolder = () => openDialog({ type: "dir", value: "" });
+  const newFile = () => openDialog({ type: "file", value: "" });
   const pickUpload = () => uploadRef.current?.click();
 
   function openInfo(entry: FileEntry | null) {
@@ -859,7 +873,7 @@ export function FilesApp({ payload }: { payload?: WindowPayload }) {
           onDownload={() => onDownloadSelected(selectedEntries)}
           onRename={() =>
             singleSelectedEntry &&
-            setDialog({
+            openDialog({
               type: "rename",
               value: singleSelectedEntry.name,
               from: singleSelectedEntry.path,
@@ -914,10 +928,17 @@ export function FilesApp({ payload }: { payload?: WindowPayload }) {
           >
             <label className="sui-finder-muted">{DIALOG_TEXT[dialog.type].label}</label>
             <input
+              key={dialogKey}
               autoFocus
               className="sui-input min-w-0 flex-1 rounded-md px-2 py-1 outline-none focus:ring-2 focus:ring-sky-400"
               value={dialog.value}
               onChange={(event) => setDialog({ ...dialog, value: event.target.value })}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  setDialog(null);
+                }
+              }}
             />
             <button type="submit" className={toolbarClass}>
               {DIALOG_TEXT[dialog.type].submit}
@@ -1275,7 +1296,7 @@ export function FilesApp({ payload }: { payload?: WindowPayload }) {
           onTerminalHere={() => openTerminalHere(menu.entry)}
           onRename={() =>
             menu.entry &&
-            setDialog({ type: "rename", value: menu.entry.name, from: menu.entry.path })
+            openDialog({ type: "rename", value: menu.entry.name, from: menu.entry.path })
           }
           onCopy={() => copyToClipboard("copy", menuTargets(menu.entry))}
           onCut={() => copyToClipboard("cut", menuTargets(menu.entry))}
@@ -1284,6 +1305,13 @@ export function FilesApp({ payload }: { payload?: WindowPayload }) {
           onNewFile={newFile}
           onUpload={pickUpload}
           canPaste={Boolean(clipboard)}
+          onEdit={
+            menu.entry && isEditable(menu.entry)
+              ? () =>
+                  menu.entry &&
+                  openWindow("editor", { filePath: menu.entry.path, fileName: menu.entry.name })
+              : undefined
+          }
           onEditWithCode={
             codeInstalled
               ? () =>
@@ -1301,7 +1329,7 @@ export function FilesApp({ payload }: { payload?: WindowPayload }) {
           onExtractHere={() => menu.entry && void onExtract(menu.entry, "here")}
           onExtractTo={() =>
             menu.entry &&
-            setDialog({
+            openDialog({
               type: "extract",
               value: joinPath(path, archiveStem(menu.entry.name)),
               archive: menu.entry,

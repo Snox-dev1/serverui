@@ -29,6 +29,7 @@ type FileContextMenuProps = FileMenuActions & {
   entry: FileEntry | null;
   selectedEntries?: FileEntry[];
   canPaste: boolean;
+  onEdit?: () => void;
   /** Only given when VS Code is installed on the server; without it the item is hidden. */
   onEditWithCode?: () => void;
   onAddToDesktop?: () => void;
@@ -82,6 +83,7 @@ export function menuItems({
   const archive = isArchive(entry);
   return [
     { label: "Open", run: a.onOpen },
+    ...(!dir && a.onEdit ? [{ label: "Edit", run: a.onEdit }] : []),
     ...(dir ? [{ label: "Open Terminal", run: a.onTerminalHere }] : []),
     ...(a.onEditWithCode
       ? [{ label: dir ? "Open in VS Code" : "Edit with Code", run: a.onEditWithCode }]

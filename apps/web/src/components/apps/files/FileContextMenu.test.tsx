@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { menuItems, type FileMenuActions } from "@/src/components/apps/files/FileContextMenu";
+import {
+  relativeToHome,
+  menuItems,
+  type FileMenuActions,
+} from "@/src/components/apps/files/FileContextMenu";
 import type { FileEntry } from "@/src/lib/api/files";
 
 const noop = vi.fn();
@@ -99,18 +103,28 @@ describe("file context menu", () => {
     expect(labels(a, [a, dir])).not.toContain("Download (2 items)");
   });
 
-  it("offers VS Code only when the server has it, next to Open", () => {
-    const withCode = (entryArg: FileEntry | null) =>
-      menuItems({ ...actions, entry: entryArg, canPaste: false, onEditWithCode: noop })
+  it("offers px0 only when the server has it, next to Open", () => {
+    const withPx0 = (entryArg: FileEntry | null) =>
+      menuItems({ ...actions, entry: entryArg, canPaste: false, onOpenInPx0: noop })
         .filter((item) => item !== "separator")
         .map((item) => item.label);
 
-    expect(labels(entry("notes.txt"))).not.toContain("Edit with Code");
-    expect(labels(entry("www", "dir"))).not.toContain("Open in VS Code");
-    expect(labels(null)).not.toContain("Open Folder in VS Code");
+    expect(labels(entry("notes.txt"))).not.toContain("Open in px0");
+    expect(labels(entry("www", "dir"))).not.toContain("Open in px0");
+    expect(labels(null)).not.toContain("Open Folder in px0");
 
-    expect(withCode(entry("notes.txt")).slice(0, 2)).toEqual(["Open", "Edit with Code"]);
-    expect(withCode(entry("www", "dir"))).toContain("Open in VS Code");
-    expect(withCode(null)).toContain("Open Folder in VS Code");
+    expect(withPx0(entry("notes.txt")).slice(0, 2)).toEqual(["Open", "Open in px0"]);
+    expect(withPx0(entry("www", "dir"))).not.toContain("Open in px0");
+    expect(withPx0(null)).toContain("Open Folder in px0");
+  });
+});
+
+describe("relativeToHome", () => {
+  it("accepts home and its children, rejects siblings and unknown home", () => {
+    expect(relativeToHome("/home/bob", "/home/bob")).toBe("");
+    expect(relativeToHome("/home/bob/x/y.ts", "/home/bob/")).toBe("x/y.ts");
+    expect(relativeToHome("/etc", "/home/bob")).toBeNull();
+    expect(relativeToHome("/home/bob2/a", "/home/bob")).toBeNull();
+    expect(relativeToHome("/home/bob/a", null)).toBeNull();
   });
 });

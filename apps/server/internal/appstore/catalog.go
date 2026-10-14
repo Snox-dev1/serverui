@@ -89,23 +89,25 @@ else echo "no supported package manager (apt, dnf or apk)"; exit 1; fi
 `, cmds[0], cmds[1], cmds[2])
 }
 
-var codeServerInstall = fetchAndRun("https://code-server.dev/install.sh", "sh", "--method standalone")
+// px0's installer picks /usr/local/bin when it is writable and on PATH (root);
+// pinning ~/.local/bin keeps Remove simple and sudo out of it.
+var px0Install = "export PX0_INSTALL_DIR=\"$HOME/.local/bin\"\n" + fetchAndRun("https://px0.ai/install.sh", "sh", "")
 
 // Catalog is intentionally closed. Docker and Node.js are detect-only: removing
 // them remotely can take containers or other tools down with it.
 var Catalog = []App{
 	{
-		ID:      "code-server",
-		Bin:     "code-server",
-		Version: `code-server --version | awk '{print $1}'`,
-		Install: codeServerInstall,
-		Update:  codeServerInstall,
+		ID:      "px0",
+		Bin:     "px0",
+		Version: `px0 -version | awk '{print $2}'`,
+		Install: px0Install,
+		Update:  px0Install,
 		// Stops the process ServerUI started (the pid is only trusted if it still is
-		// code-server), then deletes the binary. Keeps ~/.config/code-server on purpose.
-		Remove: `P="$HOME/.local/share/serverui/code-server.pid"
-if [ -f "$P" ] && grep -q code-server "/proc/$(cat "$P")/cmdline" 2>/dev/null; then kill "$(cat "$P")" 2>/dev/null; fi
-rm -f "$HOME"/.local/share/serverui/code-server.*
-rm -rf "$HOME"/.local/lib/code-server-* "$HOME/.local/bin/code-server"
+		// px0), then deletes the binary. Keeps ~/.px0 (user state) on purpose.
+		Remove: `P="$HOME/.local/share/serverui/px0.pid"
+if [ -f "$P" ] && grep -q px0 "/proc/$(cat "$P")/cmdline" 2>/dev/null; then kill "$(cat "$P")" 2>/dev/null; fi
+rm -f "$HOME"/.local/share/serverui/px0.*
+rm -f "$HOME/.local/bin/px0"
 `,
 	},
 	{

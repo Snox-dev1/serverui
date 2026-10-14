@@ -19,13 +19,13 @@ export type StoreApp = {
 // A closed list on purpose: install scripts live server side, never from the client.
 export const STORE_CATALOG: readonly StoreApp[] = [
   {
-    id: "code-server",
-    name: "VS Code",
-    tagline: "The full VS Code editor, served from your server and opened in a window.",
+    id: "px0",
+    name: "px0",
+    tagline: "A web console to review code and git diffs, served from your server. MIT licensed.",
     category: "Editors",
     icon: Code2,
     tint: "from-sky-500 to-blue-700",
-    footprint: "code-server · ~400 MB RAM",
+    footprint: "px0 · web console",
   },
   {
     id: "claude-code",

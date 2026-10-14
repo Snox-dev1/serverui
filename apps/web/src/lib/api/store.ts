@@ -35,10 +35,10 @@ export async function listStoreApps(serverId: string) {
   return result.apps;
 }
 
-/** Whether code-server is installed on the server; detects once, then reuses the last answer. */
-export async function codeServerInstalled(serverId: string) {
+/** Whether px0 is installed on the server; detects once, then reuses the last answer. */
+export async function px0Installed(serverId: string) {
   const apps = lastStatuses.get(serverId) ?? (await listStoreApps(serverId));
-  return apps.some((app) => app.id === "code-server" && app.installed);
+  return apps.some((app) => app.id === "px0" && app.installed);
 }
 
 export function startStoreJob(serverId: string, appId: string, action: StoreAction) {

@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   images: staticExport ? { unoptimized: true } : undefined,
   transpilePackages: ["dusk-react"],
   devIndicators: false,
-  // VS Code is proxied under /api/code/<id>/ and its relative URLs need that final
+  // px0 is proxied under /api/px0/<id>/ and its relative URLs need that final
   // slash. Without this Next strips it (308) and the Go mux puts it back, in a loop.
   skipTrailingSlashRedirect: true,
   turbopack: {

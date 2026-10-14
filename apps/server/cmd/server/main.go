@@ -12,11 +12,11 @@ import (
 	"serverui/server/internal/api"
 	"serverui/server/internal/appstore"
 	"serverui/server/internal/archive"
-	"serverui/server/internal/codeserver"
 	"serverui/server/internal/crypto"
 	"serverui/server/internal/db"
 	"serverui/server/internal/filesystem"
 	"serverui/server/internal/metrics"
+	"serverui/server/internal/px0"
 	"serverui/server/internal/secrets"
 	"serverui/server/internal/servers"
 	"serverui/server/internal/terminal"
@@ -59,7 +59,7 @@ func main() {
 		files,
 		archive.New(pool, files.List),
 		appstore.New(pool),
-		codeserver.New(pool, codeserver.SSHDial(pool.Ensure)),
+		px0.New(pool, px0.SSHDial(pool.Ensure)),
 		terminal.New(pool),
 	).Handler()
 

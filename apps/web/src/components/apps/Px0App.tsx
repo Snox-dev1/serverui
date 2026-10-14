@@ -1,54 +1,50 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { ApiError } from "@/src/lib/api/client";
-import { codeFrameUrl, startCode, type CodeTarget } from "@/src/lib/api/code";
-import { parentPath } from "@/src/lib/api/files";
+import { px0FrameUrl, startPx0 } from "@/src/lib/api/px0";
 import { useSelectedServer } from "@/src/lib/session";
 import type { WindowPayload } from "@/src/components/window/window-context";
 
-function targetOf(payload?: WindowPayload): CodeTarget {
-  const path = payload?.filePath;
-  if (!path) return { folder: payload?.cwd };
-  if (payload.isDirectory) return { folder: path };
-  return { folder: parentPath(path), file: path };
-}
-
-export function VsCodeApp({ payload }: { payload?: WindowPayload }) {
+export function Px0App({ payload }: { payload?: WindowPayload }) {
   // Remounting per server restarts the handshake for the new machine.
-  return <VsCode key={useSelectedServer()?.id ?? ""} payload={payload} />;
+  return <Px0 key={useSelectedServer()?.id ?? ""} payload={payload} />;
 }
 
-function VsCode({ payload }: { payload?: WindowPayload }) {
+function Px0({ payload }: { payload?: WindowPayload }) {
   const server = useSelectedServer();
   const serverId = server?.id || "";
   const [attempt, setAttempt] = useState(0);
   // Each answer carries the attempt it belongs to, so "starting" is "no answer yet".
-  const [answer, setAnswer] = useState<{ attempt: number; base?: string; error?: string } | null>(
-    null,
-  );
+  const [answer, setAnswer] = useState<{
+    attempt: number;
+    base?: string;
+    error?: string;
+    missing?: boolean;
+  } | null>(null);
   const starting = Boolean(serverId) && answer?.attempt !== attempt;
 
   useEffect(() => {
     if (!serverId) return;
     let cancelled = false;
-    startCode(serverId)
+    startPx0(serverId)
       .then((base) => {
         if (!cancelled) setAnswer({ attempt, base });
       })
       .catch((err) => {
         if (cancelled) return;
-        const error = err instanceof ApiError ? err.message : "unable to start VS Code";
-        setAnswer({ attempt, error });
+        const error = err instanceof ApiError ? err.message : "unable to start px0";
+        setAnswer({ attempt, error, missing: err instanceof ApiError && err.status === 409 });
       });
     return () => {
       cancelled = true;
     };
   }, [serverId, attempt]);
 
-  const target = useMemo(() => targetOf(payload), [payload]);
-  const src = answer?.base ? codeFrameUrl(answer.base, target) : null;
+  // filePath is already relative to the SSH home, which is px0's root.
+  const target = payload?.filePath;
+  const src = answer?.base ? px0FrameUrl(answer.base, target) : null;
 
   if (!serverId) {
     return <Message title="No server selected" />;
@@ -58,19 +54,19 @@ function VsCode({ payload }: { payload?: WindowPayload }) {
       <div className="flex h-full flex-col items-center justify-center gap-3 text-white/70">
         <Loader2 className="size-6 animate-spin" aria-hidden />
         <p className="text-[13px]" role="status">
-          Starting VS Code on {server?.name}…
+          Starting px0 on {server?.name}…
         </p>
       </div>
     );
   }
   if (!src) {
-    const missing = answer?.error?.includes("not installed");
+    const missing = answer?.missing;
     return (
       <Message
-        title="VS Code did not start"
+        title="px0 did not start"
         detail={
           missing
-            ? "VS Code is not installed on this server. Install it from the Store, then open it again."
+            ? "px0 is not installed on this server. Install it from the Store, then open it again."
             : answer?.error
         }
         onRetry={missing ? undefined : () => setAttempt((n) => n + 1)}
@@ -79,7 +75,7 @@ function VsCode({ payload }: { payload?: WindowPayload }) {
   }
   return (
     <iframe
-      title="VS Code"
+      title="px0"
       src={src}
       className="size-full border-0 bg-[#1e1e1e]"
       allow="clipboard-read; clipboard-write"

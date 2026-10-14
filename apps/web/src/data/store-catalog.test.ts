@@ -8,7 +8,7 @@ describe("filterStoreApps", () => {
 
     expect(names("All")).toHaveLength(STORE_CATALOG.length);
     expect(names("Runtimes")).toEqual(["Node.js", "Bun"]);
-    expect(names("All", "  VS CODE ")).toEqual(["VS Code"]);
+    expect(names("All", "  PX0 ")).toEqual(["px0"]);
     expect(names("Tools", "node")).toEqual([]);
   });
 });
